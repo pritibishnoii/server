@@ -1,17 +1,12 @@
-
 const User = require("../model/User");
 //4] import bcrypt package
 const bcrypt = require("bcrypt");
 
-
 const jwt = require("jsonwebtoken");
 
-require('dotenv').config()
+require("dotenv").config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-
-
-
 
 // Registeer 👇👇👇👇
 const registerUser = async (req, res, next) => {
@@ -46,8 +41,6 @@ const registerUser = async (req, res, next) => {
   }
 };
 
-
-
 // Login 👇👇👇👇
 const handleLogin = async (req, res, next) => {
   const { email, password } = req.body;
@@ -70,7 +63,7 @@ const handleLogin = async (req, res, next) => {
             email: userExist.email,
             userName: userExist.name,
             userID: userExist._id,
-          }
+          },
         });
       } else {
         res.status(401).json({
@@ -87,79 +80,71 @@ const handleLogin = async (req, res, next) => {
   }
 };
 
-
 const updateUser = async (req, res) => {
   // console.log(req.params)
-  console.log(req.params.userId)
+  console.log(req.params.userId);
   try {
-      const { userId } = req.params;
-      // console.log(req.params);
-      const { username, email, newpassword, oldpassword } = req.body;
+    const { userId } = req.params;
+    // console.log(req.params);
+    const { username, email, newpassword, oldpassword } = req.body;
 
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (oldpassword && newpassword) {
+      const isMatch = await bcrypt.compare(oldpassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Old password is not correct" });
       }
+      user.password = await bcrypt.hash(newpassword, 12);
+      user.confirmpassword = user.password;
+    }
 
-      if (oldpassword && newpassword) {
-          const isMatch = await bcrypt.compare(oldpassword, user.password);
-          if (!isMatch) {
-              return res.status(400).json({ message: 'Old password is not correct' });
-          }
-          user.password = await bcrypt.hash(newpassword, 12);
-          user.confirmpassword = user.password;
-      }
+    if (username) user.username = username;
+    if (email) user.email = email;
 
-      if (username) user.username = username;
-      if (email) user.email = email;
+    await user.save();
 
-      await user.save();
-
-      res.status(200).json({ success: true, message: 'User updated successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: "User updated successfully" });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// const userDetails = async (req, res) => {
-//   try {
-//     const { id } = req.params; 
-//     console.log(id)
-//     if (!id) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "User ID is required", 
-//       });
-//     }
-//     const userDetails = await User.findById(id); 
-//     if (!userDetails) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-//     return res.status(200).json({
-//       success: true,
-//       userDetails,
-//       message: "User details fetched successfully", 
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Error fetching user details",
-//     });
-//   }
-// };
+const userDetails = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log(userId);
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+    const userDetails = await User.findById(userId);
+    if (!userDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      userDetails,
+      message: "User details fetched successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching user details",
+    });
+  }
+};
 
-
-
-
-
-
-
-
-
-
-module.exports = { registerUser, handleLogin, updateUser };
+module.exports = { registerUser, handleLogin, updateUser, userDetails };

@@ -1,8 +1,13 @@
 //**Import modules
 const express = require("express");
-const { registerUser, handleLogin,updateUser } = require("../controllers/userController");
+const {
+  registerUser,
+  handleLogin,
+  updateUser,
+  userDetails,
+} = require("../controllers/userController");
 const validateUser = require("../middelwares/validateUser");
-const router = express.Router(); 
+const router = express.Router();
 
 //*** */
 router.get("/health", (req, res) => {
@@ -18,8 +23,8 @@ router.post("/register", validateUser, registerUser);
 // ****Create a Login Route
 router.post("/login", handleLogin);
 
-router.put('/updateuser/:userId', updateUser);  // New route for updating user details
+router.put("/updateuser/:userId", updateUser); // New route for updating user details
 
-// router.get("/userdetails/:id", userDetails);
+router.get("/userdetails/:id", userDetails);
 
 module.exports = router;
